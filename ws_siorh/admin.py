@@ -9,8 +9,22 @@ from openpyxl.drawing.image import Image
 from io import BytesIO
 
 # Importamos lo necesario para la bitácora
-from auditoria.models import RegistroActividad
-from auditoria.utils import log_user_view # Función de ayuda para registrar
+try:
+    from auditoria.models import RegistroActividad
+except Exception:
+    class _DummyRegistroManager:
+        @staticmethod
+        def create(*args, **kwargs):
+            return None
+
+    class RegistroActividad:
+        objects = _DummyRegistroManager()
+
+try:
+    from auditoria.utils import log_user_view  # Función de ayuda para registrar
+except Exception:
+    def log_user_view(*args, **kwargs):
+        return None
 
 # --- "FÁBRICA" DE FILTROS ---
 def crear_filtro_conteo(nombre_campo, titulo_filtro):

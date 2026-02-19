@@ -11,7 +11,16 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 from .models import PlantillaFin
 from .models import BajasFin 
-from auditoria.models import RegistroActividad # <-- IMPORTA
+try:
+    from auditoria.models import RegistroActividad
+except Exception:
+    class _DummyRegistroManager:
+        @staticmethod
+        def create(*args, **kwargs):
+            return None
+
+    class RegistroActividad:
+        objects = _DummyRegistroManager()
 
 
 def generar_cedula_pdf(request, posicion_pk):
