@@ -43,8 +43,10 @@ class PlantillaFinViewSet(viewsets.ReadOnlyModelViewSet):
             'nombre_puesto_funcional': 'nombre_puesto_funcional__icontains',
             'unidad_administrativa':   'unidad_administrativa__icontains',
             'dg_o_aduana_compactada':  'dg_o_aduana_compactada__icontains',
-            'departamento':            'departamento__icontains',
-            'tipo_de_contratacion':    'tipo_de_contratacion__icontains',
+            'departamento':                    'departamento__icontains',
+            'tipo_de_contratacion':            'tipo_de_contratacion__icontains',
+            'tipo_de_personal_sedena_semar':   'tipo_de_personal_sedena_semar__icontains',
+            'rango':                           'rango__icontains',
         }
 
         for param_name, orm_filter in map_filters.items():

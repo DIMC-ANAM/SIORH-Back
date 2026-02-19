@@ -29,6 +29,8 @@ class PlantillaFinSerializer(serializers.ModelSerializer):
             'tipo_de_contratacion',
             'dg_o_aduana_compactada',
             'smn',
+            'tipo_de_personal_sedena_semar',
+            'rango',
             'foto_base64',
         ]
 
