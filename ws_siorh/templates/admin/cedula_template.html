@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Cédula ANAM</title>
+  <style>
+    /* =======================
+      OMAR RAMIREZ ALBARRAN
+       CONFIGURACIÓN DE PÁGINA
+       ======================= */
+    @page {
+      size: letter;
+      /* Margen ajustado para que el contenido inicie al nivel del marco  estaba en  15 18 20 18*/
+      margin: 15mm 18mm 35mm 18mm;
+      @bottom-center {
+        content: element(footer);
+      }
+      /*counter-increment: page;*/
+    }
+
+    :root {
+      --vino: #800000;
+      --gris: #696969;
+      --negro: #000;
+      --box-bg: rgba(235,235,235,0.92);
+      --box-border: #ddc9a3;
+    }
+
+    /* Fuentes Institucionales */
+    @font-face { font-family: "Patria"; src: url("{{ patria_font_uri }}"); font-weight: 400; }
+    @font-face { font-family: "Noto Sans"; src: url("{{ noto_regular_uri }}"); font-weight: 400; }
+    @font-face { font-family: "Noto Sans"; src: url("{{ noto_bold_uri }}"); font-weight: 700; }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 8pt;
+      color: var(--negro);
+      margin: 0; padding: 0;
+    }
+
+    * {
+      font-family: Arial, sans-serif;
+    }
+
+    .title,
+    .title * {
+      font-family: "Patria", serif !important;
+    }
+
+    /* FONDOS Y MARCOS FIJOS */
+    .page-bg { position: fixed; top: -15mm; left: -18mm; width: 216mm; height: 279mm; background: url("{{ fondo_uri }}") no-repeat; background-size: 100% 100%; z-index: -2; }
+    .page-frame { position: fixed; top: -15mm; left: -18mm; width: 216mm; height: 279mm; background: url("{{ marco_uri }}") no-repeat; background-size: 100% 100%; z-index: -1; }
+
+/* =======================
+       FOOTER PERSISTENTE
+       ======================= */
+    .footer {
+      /*position: fixed;*/
+      position: running(footer);
+      /*bottom: -35mm;*/ /* -15Ajuste para que quede dentro del margen inferior */
+      height: 30mm;
+      /*left: 0;*/
+      /*right: 0;*/
+      /*height: 30mm;*/
+      /*display: table;*/
+      /*width: 100%;*/      
+      padding: 0;
+      border-top: 0.2mm solid rgba(0,0,0,0.1);
+      font-size: 7pt;
+    }
+      
+    .footer-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .footer-cell {
+      /*display: table-cell;*/
+      vertical-align: middle;
+      font-size: 7pt;
+      color: var(--gris);
+    }
+    .footer-left { text-align: left; width: 33%; }
+    .footer-center { text-align: center; width: 33%; }
+    .footer-right { text-align: right; }
+
+    /* Numeración Automática */
+    .pagenumber:before { content: counter(page); }
+    .pagecount:before { content: counter(pages); }    
+    
+    .qr-box {
+      width: 20mm;
+      height: 20mm;
+      float: right;
+      /*display: inline-block;*/
+      /*margin-right: -2mm;*/
+    }
+
+    /* HEADER */
+    .header-table { width: 100%; margin-bottom: 2mm; border: none; }
+    .logo { width: 80mm; height: auto; }
+    .meta { text-align: right; color: var(--gris); line-height: 1.1; font-size: 7.5pt; }
+    .meta .bold { font-weight: 700; color: var(--negro); }
+
+    /* TÍTULO */
+    .title-wrap { text-align: center; margin-bottom: 4mm; }
+    .title { font-family: "Patria", serif; font-size: 22pt; color: var(--vino); margin: 0; }
+
+    /* CAJAS DE INFORMACIÓN */
+    .box { 
+      background: var(--box-bg); 
+      border-radius: 2mm; 
+      padding: 4mm; 
+      margin-bottom: 3mm; 
+      page-break-inside: avoid; /* Bloques pequeños no se parten */
+      border-left: 1.5mm solid var(--box-border); 
+    }
+
+    .box-flow { 
+      background: var(--box-bg); 
+      border-radius: 2mm; 
+      padding: 4mm; 
+      margin-bottom: 3mm; 
+      page-break-inside: auto !important; /* Permite que las tablas fluyan entre hojas */
+      border-left: 1.5mm solid var(--box-border); 
+    }
+
+    .box-title { font-weight: 700; font-size: 11pt; color: var(--vino); margin-bottom: 2mm; border-bottom: 0.3mm solid var(--box-border); }
+
+    /* GRID LAYOUT */
+    .grid-table { width: 100%; border: none; }
+    .grid-table td { vertical-align: top; padding: 1mm; border: none; }
+    .foto-cell { width: 26mm; }
+    .foto { width: 23.3mm; height: 30.9mm; background: #fff; border: 0.1mm solid #ccc; }
+    .foto img { width: 100%; height: 100%; object-fit: cover; }
+    
+    .label { font-weight: 700; display: inline-block; min-width: 22mm; }
+    .field { margin-bottom: 1mm; }
+    .subhead { font-weight: 700; margin-top: 2mm; margin-bottom: 1mm; color: #444; border-bottom: 0.1mm solid #ddd; }
+
+    /* TABLAS DE DATOS */
+    table.data-table { width: 100%; border-collapse: collapse; margin-top: 1mm; font-size: 8pt; }
+    .data-table th { background: rgba(0,0,0,0.03); text-align: left; padding: 1.2mm; border-bottom: 0.4mm solid var(--vino); font-weight: 700; }
+    .data-table td { padding: 1.2mm; border-bottom: 0.1mm solid rgba(0,0,0,0.1); vertical-align: top; }
+
+    .page-break { page-break-before: always; }
+    .cert { font-size: 10pt; line-height: 1.5; text-align: justify; padding: 1.2mm; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="page-bg"></div>
+  <div class="page-frame"></div>  
+
+<!--<div class="footer">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-cell" style="text-align: left; width: 40%; font-size: 6pt;">
+          Generado por: {{ user.username|default:"Sistema Atenea" }}
+          ID: {{ registro.num_empleado|default:"000" }} 
+        </td>
+        <td class="footer-cell" style="text-align: center; width: 20%;">
+          Página <span class="pagenumber"></span> de <span class="pagecount"></span>
+        </td>
+        <td class="footer-cell" style="text-align: right; width: 40%;">
+          <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://atenea.world/plantilla/{{ registro.posicion|default:'' }}/pdf" 
+            style="width:100%; height: auto; display: block;">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>-->
+
+    <div class="footer">
+    <table class="footer-table">
+      <tr>
+        <td class="footer-cell footer-left" style="font-size: 6pt;">
+          Generado por: {{ user.username|default:"Sistema Atenea" }}
+          ID: {{ registro.num_empleado|default:"000" }} 
+        </td>
+        <td class="footer-cell footer-center">
+          Página <span class="pagenumber"></span> de <span class="pagecount"></span>
+        </td>
+        <td class="footer-cell footer-right">
+          <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://atenea.world/plantilla/{{ registro.posicion|default:'' }}/pdf" 
+                style="width:100%; height:auto; display:block;">
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  
+  <div class="content">
+    <table class="header-table">
+      <tr>
+        <td>
+          {% if logo_uri %}<img class="logo" src="{{ logo_uri }}" alt="Logo Hacienda/ANAM">{% endif %}
+        </td>
+        <td class="meta">
+          <div>Fecha de Emisión: <b>{{ hoy|date:"d-m-Y" }}</b></div>
+          <div class="bold">Unidad de Administración y Finanzas</div>
+          <div class="bold">Dirección de Recursos Humanos</div>
+        </td>
+      </tr>
+    </table>
+
+    <div class="title-wrap">
+      <div class="title">Cédula ANAM</div>
+    </div>
+
+    <div class="box">
+      <div class="box-title">Datos Personales</div>
+      <table class="grid-table">
+        <tr>
+          <td class="foto-cell">
+            <div class="foto">
+              {% if foto_uri %}<img src="{{ foto_uri }}">{% endif %}
+            </div>
+          </td>
+          <td>
+            <div class="field"><span class="label">Id Empl:</span> {{ registro.num_empleado|default:"" }}</div>
+            <div class="field"><span class="label">Nombres:</span> {{ registro.nombres|default:"" }}</div>
+            <div class="field"><span class="label">CURP:</span> {{ registro.curp|default:"" }}</div>
+            <div class="field"><span class="label">Teléfono:</span> {{ domicilio.phone|default:"" }}</div>
+            <div class="subhead">Formación</div>
+            <div class="field"><span class="label">Grado:</span> {{ domicilio.escolaridad_nivrl|default:"" }}</div>
+            <div class="field"><span class="label">Carrera:</span> {{ domicilio.carrera|default:"" }}</div>
+          </td>
+          <td>
+            <div class="field"><span class="label">RFC:</span> {{ registro.rfc|default:"" }}</div>
+            <div class="field"><span class="label">Correo:</span> {{ domicilio.email_addr|default:"" }}</div>
+            <div class="field"><span class="label">Dirección:</span><br> {{ domicilio.calle|default_if_none:"" }}
+              {% if domicilio.hr_numero_exterior %} No. {{ domicilio.hr_numero_exterior }}{% endif %}
+              {% if domicilio.hr_numero_interior %}, Int. {{ domicilio.hr_numero_interior }}{% endif %}
+              {% if domicilio.colonia %}, {{ domicilio.colonia }}{% endif %}
+              {% if domicilio.postal %}, {{ domicilio.postal }}{% endif %}
+              {% if domicilio.hr_municipio %}, {{ domicilio.hr_municipio }}{% endif %}
+              {% if domicilio.estado %}, {{ domicilio.estado }}{% endif %}</div>
+            <div class="subhead">Escolaridad</div>
+            <div class="field"><span class="label">Área:</span> {{ domicilio.escolaridad_area|default:"" }}</div>
+            <div class="field"><span class="label">Escuela:</span> {{ domicilio.centro_escolar|default:"" }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="box">
+      <div class="box-title">Datos Contractuales</div>
+      <table class="grid-table">
+        <tr>
+          <td>
+            <div class="field"><span class="label">Fecha Efec:</span> {{ registro.fecha_efectiva_personal|slice:"0:10" }}</div>
+            <div class="field"><span class="label">Posición:</span> {{ registro.posicion|default:"" }}</div>
+            <div class="field"><span class="label">U de Neg:</span> {{ registro.unidad_de_negocio|default:"" }}</div>
+            <div class="field"><span class="label">Nivel:</span> {{ registro.nivel|default:"" }}</div>
+          </td>
+          <td>
+            <div class="subhead" style="margin-top:0;">Remuneración</div>
+            <div class="field"><span class="label">Salario Bruto:</span> {{ smb_fmt|default:"" }}</div>
+            <div class="field"><span class="label">Salario Neto:</span> {{ smn_fmt|default:"" }}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="box">      
+        <div class="box-title">Datos Organizacionales</div>
+        <table class="grid-table">
+          <tr>
+            <td>
+              <div class="field"><span class="label">Unidad Administrativa:</span> {{ registro.unidad_administrativa|default:"" }}</div>
+              <div class="field"><span class="label">Puesto Funcional:</span> {{ registro.nombre_puesto_funcional|default:"" }}</div>
+              <div class="field"><span class="label">Departamento:</span> {{ registro.departamento|default:"" }}</div>
+              <div class="field"><span class="label">Dirección Laboral:</span> {{ registro.descripcion_ubicacion|default:"" }}</div>
+            </td>
+          </tr>
+      </table>
+    </div>
+
+    <div class="box-flow">
+      <div class="box-title">Movimientos de Contratación</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Posición</th>
+            <th>Puesto</th>
+            <th>Área</th>
+            <th>F. Efva</th>
+            <th>Acción</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in movimientos %}
+          <tr>
+            <td>{{ m.posicion }}</td>
+            <td>{{ m.descr_larga }}</td>
+            <td>{{ m.descr_larga1 }}</td>
+            <td>{{ m.fecha_efectiva|slice:"0:10"}}</td>
+            <td>{{ m.accion_nombre }}</td>
+            <td>{{ m.motivo_nombre }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box-flow">
+      <div class="box-title">Datos Familiares</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre Completo</th>
+            <th>CURP</th>
+            <th>Parentesco</th>
+            <th>Celular</th>
+            <th>Sexo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in datos_familiares %}
+          <tr>
+            <td>{{ f.hr_nombre }} {{ f.last_name100 }} {{ f.hr_secnd_last_name }}</td>
+            <td>{{ f.hr_curp }}</td>
+            <td>{{ f.parentesco }}</td>
+            <td>{{ f.tel_celular }}</td>
+            <td>{{ f.sexo }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">Sin registros familiares.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box-flow">
+      <div class="box-title">Experiencia Externa</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Institución / Empresa</th>
+            <th>Puesto</th>
+            <th>Periodo</th>
+            <th>Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in experiencia_externa %}
+          <tr>
+            <td>{{ e.institucion }}</td>
+            <td>{{ e.puesto }}</td>
+            <td>{{ e.inicio|slice:"0:10" }} - {{ e.fin|slice:"0:10" }}</td>
+            <td>{{ e.descripcion }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">Sin registros de experiencia externa.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+        <!-- NUEVO: VIAJES INTERNACIONALES -->
+    <div class="box-flow">
+      <div class="box-title">Viajes Internacionales</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>País</th>
+            <th>Ciudad</th>
+            <th>Motivo</th>
+            <th>Inicio</th>
+            <th>Fin</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if viajes_internacionales and viajes_internacionales|length %}
+            {% for v in viajes_internacionales %}
+              <tr>
+                <td>{{ v.pais|default_if_none:"" }}</td>
+                <td>{{ v.ciudad|default_if_none:"" }}</td>
+                <td>{{ v.motivo|default_if_none:"" }}</td>
+                <td>{{ v.inicio|default_if_none:"" }}</td>
+                <td>{{ v.fin|default_if_none:"" }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="5">Sin registros de viajes internacionales</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- NUEVO: DECLARACIONES PATRIMONIALES -->
+    <div class="box-flow">
+      <div class="box-title">Declaraciones Patrimoniales</div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Ejercicio</th>
+            <th>Fecha de Presentación</th>
+            <th>Estatus</th>
+            <th>Folio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if declaraciones_patrimoniales and declaraciones_patrimoniales|length %}
+            {% for d in declaraciones_patrimoniales %}
+              <tr>
+                <td>{{ d.tipo|default_if_none:"" }}</td>
+                <td>{{ d.ejercicio|default_if_none:"" }}</td>
+                <td>{{ d.fecha|default_if_none:"" }}</td>
+                <td>{{ d.estatus|default_if_none:"" }}</td>
+                <td>{{ d.folio|default_if_none:"" }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="5">Sin registros de Declaraciones Patrimoniales</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="page-break"></div>
+    <div class="box">
+      <div class="box-title">Certificación</div>
+      <div class="cert">
+"El suscrito, Lic. Camilo Benedicto Puga Mañe, Director de Recursos Humanos en la Unidad de Administración y Finanzas de la Agencia Nacional de Aduanas de México, con fundamento en los artículos 4, apartado B, fracción XI, inciso a); 13, fracción XXXIII, en relación con el 35, último párrafo, fracción I, del Reglamento Interior de la Agencia Nacional de Aduanas de México, publicado en el Diario Oficial de la Federación el 21 de diciembre del 2021, reformado el 24 de mayo de 2022, 
+                                                               C   E   R   T   I   F   I   C   A
+que la presente representación consta de fojas útiles impresa por anverso e inverso, de la cédula ejecutiva del año en curso, corresponde a los registros que obran en los controles administrativos de la Dirección de Recursos Humanos, se expide la presente en la Ciudad de México, para los efectos a que haya lugar."      
+
+      </div>
+    </div>
+  </div>
+</body>
+</html>

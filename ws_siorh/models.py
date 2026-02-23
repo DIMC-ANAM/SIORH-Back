@@ -103,3 +103,182 @@ class BajasFin(models.Model):
         verbose_name = 'Baja de Personal'
         verbose_name_plural = 'Bajas de Personal'
         ordering = ['-fecha_de_captura'] # Ordena por fecha de captura descendente
+
+
+class MovPos(models.Model):
+
+    n_pos_actual = models.CharField(
+        db_column='Nº Pos Actual',
+        max_length=255,
+        primary_key=True,
+        verbose_name='Número de Posición Actual'
+    )
+    f_efva = models.CharField(db_column='F Efva', max_length=255, blank=True, null=True, verbose_name='Fecha Efectiva')
+    fecha_captura = models.CharField(db_column='Fecha Captura', max_length=255, blank=True, null=True)
+
+    estado_psn = models.CharField(db_column='Estado Psn', max_length=255, blank=True, null=True, verbose_name='Estado de Posición')
+    cd_motivo = models.CharField(db_column='Cd Motivo', max_length=255, blank=True, null=True, verbose_name='Código de Motivo')
+    motivo = models.CharField(db_column='Motivo', max_length=255, blank=True, null=True)
+
+    descr = models.CharField(db_column='Descr', max_length=255, blank=True, null=True, verbose_name='Descripción')
+    unidad_de_negocio = models.CharField(db_column='Unidad de Negocio', max_length=255, blank=True, null=True)
+    departamento = models.CharField(db_column='Cd Departamento', max_length=255, blank=True, null=True)
+    ubicacion = models.CharField(db_column='Ubicación', max_length=255, blank=True, null=True)
+
+    nivel_direc = models.CharField(db_column='Nvl Direc', max_length=255, blank=True, null=True, verbose_name='Nivel Dirección')
+    nivel_ptal = models.CharField(db_column='Puesto Ptal', max_length=255, blank=True, null=True, verbose_name='Nivel Ptal')
+    puesto = models.CharField(db_column='Nombre Puesto', max_length=255, blank=True, null=True, verbose_name='Puesto')
+
+    class Meta:
+        db_table = 'MOV_POS'
+        managed = False
+        verbose_name = 'Movimiento de Posición'
+        verbose_name_plural = 'Historial de Posiciones (MOV_POS)'
+
+    def __str__(self):
+        return f"{self.n_pos_actual} - {self.estado_psn} ({self.fecha_captura})"
+
+
+class Familiar(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    hr_id_persona = models.CharField(db_column='HR_ID_PERSONA', max_length=255, blank=True, null=True)
+    emplid = models.CharField(db_column='EMPLID', max_length=255, blank=True, null=True, db_index=True)
+    hr_curp = models.CharField(db_column='HR_CURP', max_length=255, blank=True, null=True)
+
+    hr_nombre = models.CharField(db_column='HR_NOMBRE', max_length=255, blank=True, null=True)
+    last_name100 = models.CharField(db_column='LAST_NAME100', max_length=255, blank=True, null=True)
+    hr_secnd_last_name = models.CharField(db_column='HR_SECND_LAST_NAME', max_length=255, blank=True, null=True)
+
+    parentesco = models.CharField(db_column='PARENTESCO', max_length=255, blank=True, null=True)
+    mismo_domicilio = models.CharField(db_column='MISMO_DOMICILIO', max_length=255, blank=True, null=True)
+
+    correo_electronico = models.CharField(db_column='CORREO_ELECTRÓNICO', max_length=255, blank=True, null=True)
+
+    tel_particular = models.CharField(db_column='TELÉFONO_PARTICULAR', max_length=255, blank=True, null=True)
+    tel_celular = models.CharField(db_column='TELÉFONO_CELULAR', max_length=255, blank=True, null=True)
+
+    codigo_postal = models.CharField(db_column='CODIGO_POSTAL', max_length=255, blank=True, null=True)
+    colonia = models.CharField(db_column='COLONIA', max_length=255, blank=True, null=True)
+    asentamiento = models.CharField(db_column='ASENTAMIENTO', max_length=255, blank=True, null=True)
+
+    pais = models.CharField(db_column='PAIS', max_length=255, blank=True, null=True)
+    entidad = models.CharField(db_column='ENTIDAD', max_length=255, blank=True, null=True)
+    municipio = models.CharField(db_column='MUNICIPIO', max_length=255, blank=True, null=True)
+
+    ciudad = models.CharField(db_column='CIUDAD', max_length=255, blank=True, null=True)
+    ciudad_1 = models.CharField(db_column='CIUDAD_1', max_length=255, blank=True, null=True)
+    ciudad_2 = models.CharField(db_column='CIUDAD_2', max_length=255, blank=True, null=True)
+
+    sexo = models.CharField(db_column='SEXO', max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'FAMILIAR'
+
+
+class Domicilio(models.Model):
+    no_empleado = models.TextField(db_column='NO_EMPLEADO', primary_key=True)
+    hr_id_persona = models.TextField(db_column='HR_ID_PERSONA', blank=True, null=True)
+    position_nbr = models.TextField(db_column='POSITION_NBR', blank=True, null=True)
+    nombre_completo = models.TextField(db_column='NOMBRE_COMPLETO', blank=True, null=True)
+    rfc = models.TextField(db_column='RFC', blank=True, null=True)
+    curp = models.TextField(db_column='CURP', blank=True, null=True)
+
+    puesto_estructural = models.TextField(db_column='PUESTO_ESTRUCTURAL', blank=True, null=True)
+    puesto_funcional = models.TextField(db_column='PUESTO_FUNCIONAL', blank=True, null=True)
+    puesto = models.TextField(db_column='PUESTO', blank=True, null=True)
+
+    escolaridad_tipo = models.TextField(db_column='ESCOLARIDAD_TIPO', blank=True, null=True)
+    escolaridad_nivel = models.TextField(db_column='ESCOLARIDAD_NIVRL', blank=True, null=True)
+    escolaridad_area = models.TextField(db_column='ESCOLARIDAD_AREA', blank=True, null=True)
+    carrera = models.TextField(db_column='CARRERA', blank=True, null=True)
+    centro_escolar = models.TextField(db_column='CENTRO_ESCOLAR', blank=True, null=True)
+
+    humanos_status = models.TextField(db_column='HUMANOS_STATUS', blank=True, null=True)
+    estatus_nomina = models.TextField(db_column='ESTATUS_NOMINA', blank=True, null=True)
+
+    phone = models.TextField(db_column='PHONE', blank=True, null=True)
+    phone1 = models.TextField(db_column='PHONE1', blank=True, null=True)
+
+    calle = models.TextField(db_column='CALLE', blank=True, null=True)
+    hr_numero_exterior = models.TextField(db_column='HR_NUMERO_EXTERIOR', blank=True, null=True)
+    hr_numero_interior = models.TextField(db_column='HR_NUMERO_INTERIOR', blank=True, null=True)
+    postal = models.TextField(db_column='POSTAL', blank=True, null=True)
+    colonia = models.TextField(db_column='COLONIA', blank=True, null=True)
+    hr_municipio = models.TextField(db_column='HR_MUNICIPIO', blank=True, null=True)
+    estado = models.TextField(db_column='ESTADO', blank=True, null=True)
+
+    email_addr2 = models.TextField(db_column='EMAIL_ADDR2', blank=True, null=True)
+    email_addr = models.TextField(db_column='EMAIL_ADDR', blank=True, null=True)
+
+    deptid = models.TextField(db_column='DEPTID', blank=True, null=True)
+    unidad_administrativa = models.TextField(db_column='UNIDAD_ADMINISTRATIVA', blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'domicilios'
+
+
+class Movimiento(models.Model):
+    llave = models.CharField(db_column='LLAVE', max_length=255, primary_key=True)
+
+    posicion = models.CharField(db_column='Posición', max_length=255, blank=True, null=True)
+    id_empl = models.CharField(db_column='Id_empl', max_length=255, blank=True, null=True)
+    nombre = models.CharField(db_column='Nombre', max_length=255, blank=True, null=True)
+    paterno = models.CharField(db_column='Paterno', max_length=255, blank=True, null=True)
+    apellido_materno = models.CharField(db_column='Apellido Matern', max_length=255, blank=True, null=True)
+
+    accion = models.CharField(db_column='Acción', max_length=255, blank=True, null=True)
+    accion_nombre = models.CharField(db_column='Acción (Nombre)', max_length=255, blank=True, null=True)
+    motivo = models.CharField(db_column='Motivo', max_length=255, blank=True, null=True)
+    motivo_nombre = models.CharField(db_column='Motivo (Nombre)', max_length=255, blank=True, null=True)
+
+    fecha_efectiva = models.CharField(db_column='F/Efva', max_length=255, blank=True, null=True)
+    sec = models.CharField(db_column='Sec', max_length=255, blank=True, null=True)
+    fecha_captura = models.CharField(db_column='F/Captura', max_length=255, blank=True, null=True)
+
+    est_hr = models.CharField(db_column='Est HR', max_length=255, blank=True, null=True)
+    estado_pago = models.CharField(db_column='Estado Pago', max_length=255, blank=True, null=True)
+    partida_ptal = models.CharField(db_column='Ptda Ptal', max_length=255, blank=True, null=True)
+
+    un = models.CharField(db_column='UN', max_length=255, blank=True, null=True)
+    u_admva = models.CharField(db_column='U/Admva', max_length=255, blank=True, null=True)
+    id_depto = models.CharField(db_column='Id/Depto', max_length=255, blank=True, null=True)
+    depnd_drt = models.CharField(db_column='Depnd Drt', max_length=255, blank=True, null=True)
+
+    plan_sal = models.CharField(db_column='Plan Sal', max_length=255, blank=True, null=True)
+    grado = models.CharField(db_column='Grado', max_length=255, blank=True, null=True)
+    esc = models.CharField(db_column='Esc', max_length=255, blank=True, null=True)
+    puesto_ptal = models.CharField(db_column='Puesto Ptal', max_length=255, blank=True, null=True)
+    nivel_tabular = models.CharField(db_column='Nivel Tabular', max_length=255, blank=True, null=True)
+    gp_pago = models.CharField(db_column='Gp Pago', max_length=255, blank=True, null=True)
+    prog_beneficios = models.CharField(db_column='Prog Beneficios', max_length=255, blank=True, null=True)
+
+    sal_base = models.CharField(db_column='Sal Base', max_length=255, blank=True, null=True)
+    cd_puesto = models.CharField(db_column='Cd Puesto', max_length=255, blank=True, null=True)
+    ubicacion = models.CharField(db_column='Ubicación', max_length=255, blank=True, null=True)
+    id_estbl = models.CharField(db_column='ID Estbl', max_length=255, blank=True, null=True)
+
+    slda_prevista = models.CharField(db_column='Slda Prevista', max_length=255, blank=True, null=True)
+    fh_ult_actz = models.CharField(db_column='F/H Últ Actz', max_length=255, blank=True, null=True)
+    por = models.CharField(db_column='Por', max_length=255, blank=True, null=True)
+    ult_inicio = models.CharField(db_column='Últ Inicio', max_length=255, blank=True, null=True)
+    f_inicial = models.CharField(db_column='F/Inicial', max_length=255, blank=True, null=True)
+    gp_trabajo = models.CharField(db_column='Gp Trabajo', max_length=255, blank=True, null=True)
+    grupo_cd_sal = models.CharField(db_column='Grupo Cd Sal', max_length=255, blank=True, null=True)
+    antig_empr = models.CharField(db_column='Antig Empr', max_length=255, blank=True, null=True)
+
+    rfc = models.CharField(db_column='RFC', max_length=255, blank=True, null=True)
+    curp = models.CharField(db_column='CURP', max_length=255, blank=True, null=True)
+    id_persona = models.CharField(db_column='Id Persona', max_length=255, blank=True, null=True)
+    descr_larga = models.CharField(db_column='Descr Larga', max_length=255, blank=True, null=True)
+    niv_jerarquico = models.CharField(db_column='Niv# Jerarquico', max_length=255, blank=True, null=True)
+    descr_larga1 = models.CharField(db_column='Descr Larga1', max_length=255, blank=True, null=True)
+    genero = models.CharField(db_column='Género', max_length=255, blank=True, null=True)
+    fecha_entrada = models.CharField(db_column='Fecha Entrada', max_length=255, blank=True, null=True)
+    f_posicion = models.CharField(db_column='F Posición', max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'MOV_TOTAL'
