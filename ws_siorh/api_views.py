@@ -17,10 +17,14 @@ class PlantillaFinViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = [
         'nombres',
-        'curp',
-        'rfc',
-        'num_empleado',
+        'estado_nomina',
         'posicion',
+        'nivel',
+        'num_empleado',
+        'rfc',
+        'nombre_puesto_funcional',
+        'dg_o_aduana_compactada',
+        'programa',
     ]
     ordering_fields = ['nombres', 'smn', 'nivel', 'estado_nomina', 'programa']
     ordering = ['-smn']
