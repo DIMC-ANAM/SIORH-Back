@@ -27,6 +27,8 @@ class PlantillaFinSerializer(serializers.ModelSerializer):
             'departamento',
             'nombre_puesto_funcional',
             'tipo_de_contratacion',
+            'personal_militar_o_civil',
+            'costo_plaza_anual',
             'dg_o_aduana_compactada',
             'smn',
             'tipo_de_personal_sedena_semar',

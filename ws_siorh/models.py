@@ -59,7 +59,9 @@ class PlantillaFin(models.Model):
     validando_de_posicion_por_documento = models.CharField(db_column='Validando de posición por documento', max_length=255, blank=True, null=True, verbose_name='Validando Posición por Documento')
     reportada = models.CharField(db_column='Reportada', max_length=255, blank=True, null=True)
     foto = models.BinaryField(blank=True, null=True, verbose_name='Foto (BLOB)')
- 
+    costo_plaza_anual = models.CharField(db_column='COSTO_PLAZA_ANUAL', max_length=255, blank=True, null=True, verbose_name='Costo Plaza Anual')
+    costo_plaza_mensual = models.CharField(db_column='COSTO_PLAZA_MENSUAL', max_length=255, blank=True, null=True, verbose_name='Costo Plaza Mensual')
+
 
     class Meta:
         managed = False

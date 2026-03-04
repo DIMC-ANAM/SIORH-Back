@@ -32,19 +32,10 @@
     @font-face { font-family: "Noto Sans"; src: url("{{ noto_bold_uri }}"); font-weight: 700; }
 
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Noto Sans", sans-serif;
       font-size: 8pt;
       color: var(--negro);
       margin: 0; padding: 0;
-    }
-
-    * {
-      font-family: Arial, sans-serif;
-    }
-
-    .title,
-    .title * {
-      font-family: "Patria", serif !important;
     }
 
     /* FONDOS Y MARCOS FIJOS */
@@ -151,26 +142,6 @@
   <div class="page-bg"></div>
   <div class="page-frame"></div>  
 
-<!--<div class="footer">
-    <table class="footer-table">
-      <tr>
-        <td class="footer-cell" style="text-align: left; width: 40%; font-size: 6pt;">
-          Generado por: {{ user.username|default:"Sistema Atenea" }}
-          ID: {{ registro.num_empleado|default:"000" }} 
-        </td>
-        <td class="footer-cell" style="text-align: center; width: 20%;">
-          Página <span class="pagenumber"></span> de <span class="pagecount"></span>
-        </td>
-        <td class="footer-cell" style="text-align: right; width: 40%;">
-          <div class="qr-box">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://atenea.world/plantilla/{{ registro.posicion|default:'' }}/pdf" 
-            style="width:100%; height: auto; display: block;">
-          </div>
-        </td>
-      </tr>
-    </table>
-  </div>-->
-
     <div class="footer">
     <table class="footer-table">
       <tr>
@@ -260,6 +231,14 @@
             <div class="subhead" style="margin-top:0;">Remuneración</div>
             <div class="field"><span class="label">Salario Bruto:</span> {{ smb_fmt|default:"" }}</div>
             <div class="field"><span class="label">Salario Neto:</span> {{ smn_fmt|default:"" }}</div>
+            
+            <div class="field"><span class="label">Tipo de Plaza:</span> 
+              {% if registro.posicion|slice:"0:1" == '1' %}
+                Permanente
+              {% elif registro.posicion|slice:"0:1" == '2' %}
+                Eventual
+              {% endif %}
+            </div>
           </td>
         </tr>
       </table>
@@ -276,7 +255,7 @@
               <div class="field"><span class="label">Dirección Laboral:</span> {{ registro.descripcion_ubicacion|default:"" }}</div>
             </td>
           </tr>
-      </table>
+        </table>
     </div>
 
     <div class="box-flow">
@@ -335,6 +314,7 @@
       </table>
     </div>
 
+    {% comment %}
     <div class="box-flow">
       <div class="box-title">Experiencia Externa</div>
       <table class="data-table">
@@ -355,13 +335,14 @@
             <td>{{ e.descripcion }}</td>
           </tr>
           {% empty %}
-          <tr><td colspan="5">Sin registros de experiencia externa.</td></tr>
+          <tr><td colspan="4">Sin registros de experiencia externa.</td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    {% endcomment %}
 
-        <!-- NUEVO: VIAJES INTERNACIONALES -->
+    {% comment %}
     <div class="box-flow">
       <div class="box-title">Viajes Internacionales</div>
       <table class="data-table">
@@ -391,11 +372,11 @@
         </tbody>
       </table>
     </div>
+    {% endcomment %}
 
-    <!-- NUEVO: DECLARACIONES PATRIMONIALES -->
+    {% comment %}
     <div class="box-flow">
       <div class="box-title">Declaraciones Patrimoniales</div>
-
       <table class="data-table">
         <thead>
           <tr>
@@ -423,14 +404,15 @@
         </tbody>
       </table>
     </div>
+    {% endcomment %}
 
     <div class="page-break"></div>
     <div class="box">
       <div class="box-title">Certificación</div>
       <div class="cert">
 "El suscrito, Lic. Camilo Benedicto Puga Mañe, Director de Recursos Humanos en la Unidad de Administración y Finanzas de la Agencia Nacional de Aduanas de México, con fundamento en los artículos 4, apartado B, fracción XI, inciso a); 13, fracción XXXIII, en relación con el 35, último párrafo, fracción I, del Reglamento Interior de la Agencia Nacional de Aduanas de México, publicado en el Diario Oficial de la Federación el 21 de diciembre del 2021, reformado el 24 de mayo de 2022, 
-                                                               C   E   R   T   I   F   I   C   A
-que la presente representación consta de fojas útiles impresa por anverso e inverso, de la cédula ejecutiva del año en curso, corresponde a los registros que obran en los controles administrativos de la Dirección de Recursos Humanos, se expide la presente en la Ciudad de México, para los efectos a que haya lugar."      
+                                                       C   E   R   T   I   F   I   C   A
+que la presente representación consta de fojas útiles impresa por anverso e inverso, de la cédula ejecutiva del año en curso, corresponde a los registros que obran en los controles administrativos de la Dirección de Recursos Humanos, se expide la presente en la Ciudad de México, para los efectos a que haya lugar."       
 
       </div>
     </div>

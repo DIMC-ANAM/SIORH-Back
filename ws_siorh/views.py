@@ -112,20 +112,61 @@ def _render_pdf(html_string: str, base_url: str) -> bytes:
     gtk_candidates = [
         r'C:\Program Files\GTK3-Runtime Win64\bin',
         r'C:\Program Files\GTK3-Runtime Win64\lib',
+        r'C:\Program Files\GTK3-Runtime Win64\mingw64\bin',
+        r'C:\msys64\mingw64\bin',
+        r'C:\msys64\ucrt64\bin',
     ]
+
+    configured_candidates = []
     for candidate in gtk_candidates:
-        if os.path.isdir(candidate) and candidate.lower() not in os.environ.get('PATH', '').lower():
+        if not os.path.isdir(candidate):
+            continue
+
+        configured_candidates.append(candidate)
+        if candidate.lower() not in os.environ.get('PATH', '').lower():
             os.environ['PATH'] = f'{candidate};{os.environ.get("PATH", "")}'
+
+        add_dll_directory = getattr(os, 'add_dll_directory', None)
+        if add_dll_directory:
+            try:
+                add_dll_directory(candidate)
+            except Exception:
+                pass
 
     try:
         from weasyprint import HTML
+    except ModuleNotFoundError as exc:
+        if (exc.name or '').startswith('weasyprint'):
+            raise RuntimeError(
+                'No se encontró la dependencia de Python `weasyprint`. '
+                'Instala con: pip install weasyprint'
+            ) from exc
+        raise RuntimeError(
+            'Falló la importación de dependencias de WeasyPrint. '
+            f'Error original: {exc}'
+        ) from exc
+    except OSError as exc:
+        configured = ', '.join(configured_candidates) if configured_candidates else 'ninguna'
+        raise RuntimeError(
+            'WeasyPrint está instalado, pero faltan librerías nativas de Windows (GTK/Cairo/Pango/GObject). '
+            'No se pudo cargar una DLL requerida. '\
+            f'\nRutas detectadas para DLL: {configured}'
+            f'\nError original: {exc}'
+        ) from exc
     except Exception as exc:
         raise RuntimeError(
-            'No se encontró la dependencia weasyprint. '
-            'Instala con: pip install weasyprint'
+            'Error al importar WeasyPrint. '
+            f'Error original: {exc}'
         ) from exc
 
-    return HTML(string=html_string, base_url=base_url).write_pdf()
+    try:
+        return HTML(string=html_string, base_url=base_url).write_pdf()
+    except Exception as exc:
+        raise RuntimeError(
+            'WeasyPrint encontró un error al generar el PDF. Asegúrate de instalar las librerías nativas requeridas (GTK/Cairo/Pango/GDK-Pixbuf). '
+            'Consulta: https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation\n'
+            f'Error original: {exc}'
+        ) from exc
 
 
 def obtener_detalle_empleado(request, posicion_pk):
