@@ -136,6 +136,53 @@
 
     .page-break { page-break-before: always; }
     .cert { font-size: 10pt; line-height: 1.5; text-align: justify; padding: 1.2mm; white-space: pre-wrap; }
+    .cert-center {
+      text-align: center;
+      letter-spacing: 6px;
+      font-weight: 700;
+      margin: 6mm 0;
+      white-space: normal;
+    }
+    
+    /* FIRMAS ===================== */
+    .firmas-container {
+      margin-top: 25mm;
+      width: 100%;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    
+    .firma-principal .linea {
+      width: 75mm; /* Ancho ajustado según la imagen */
+      border-top: 0.5mm solid var(--negro);
+      margin: 0 auto 1.5mm auto; /* Centra la línea y da margen inferior */
+    }
+    
+    .firma-principal .nombre {
+      font-weight: 700;
+      font-size: 11pt;
+    }
+    
+    .firma-principal .puesto {
+      font-size: 10pt;
+    }
+    
+    .firma-coteja {
+      margin-top: 15mm; /* Separación entre el primer bloque de firma y la palabra Coteja */
+    }
+    
+    .firma-coteja .etiqueta {
+      font-size: 9pt;
+      margin-bottom: 18mm; /* Espacio grande para la firma a mano */
+    }
+    
+    .firma-coteja .nombre {
+      font-size: 9pt;
+    }
+    
+    .firma-coteja .puesto {
+      font-size: 9pt;
+    }
   </style>
 </head>
 <body>
@@ -410,12 +457,28 @@
     <div class="box">
       <div class="box-title">Certificación</div>
       <div class="cert">
-"El suscrito, Lic. Camilo Benedicto Puga Mañe, Director de Recursos Humanos en la Unidad de Administración y Finanzas de la Agencia Nacional de Aduanas de México, con fundamento en los artículos 4, apartado B, fracción XI, inciso a); 13, fracción XXXIII, en relación con el 35, último párrafo, fracción I, del Reglamento Interior de la Agencia Nacional de Aduanas de México, publicado en el Diario Oficial de la Federación el 21 de diciembre del 2021, reformado el 24 de mayo de 2022, 
-                                                       C   E   R   T   I   F   I   C   A
-que la presente representación consta de fojas útiles impresa por anverso e inverso, de la cédula ejecutiva del año en curso, corresponde a los registros que obran en los controles administrativos de la Dirección de Recursos Humanos, se expide la presente en la Ciudad de México, para los efectos a que haya lugar."       
+"El suscrito, Lic. Camilo Benedicto Puga Mañé, Director de Recursos Humanos adscrito a la Unidad de Administración y Finanzas de la Agencia Nacional de Aduanas de México, con fundamento en los artículos 4, apartado B, fracción XI, inciso a); 13, fracción XXXIII, en relación con el 35, último párrafo, fracción I, del Reglamento Interior de la Agencia Nacional de Aduanas de México, publicado en el Diario Oficial de la Federación el 21 de diciembre del 2021, última reforma publicada el 24 de mayo de 2022. 
 
+            <div class="cert-center"> C E R T I F I C A </div>
+
+Que la presente cédula de información consta de <span class="pagecount"></span> fojas útiles impresa por anverso y reverso, integrada de los registros y archivos que obran en los controles administrativos de la Dirección de Recursos Humanos, se expide la presente con carácter informativo en la Ciudad de México el {{ hoy|date:"d" }} de {{ hoy|date:"F"|lower }} de {{ hoy|date:"Y" }}, para los efectos administrativos y legales que haya lugar."       
       </div>
     </div>
+
+    <div class="firmas-container">
+      <div class="firma-principal">
+        <div class="linea"></div>
+        <div class="nombre">Lic. Camilo Benedicto Puga Mañé</div>
+        <div class="puesto">Director de Recursos Humanos</div>
+      </div>
+      
+      <div class="firma-coteja">
+        <div class="etiqueta">Coteja</div>
+        <div class="nombre">Lic. Jesús Armando Gomez Puente</div>
+        <div class="puesto">Director</div>
+      </div>
+    </div>
+
   </div>
 </body>
 </html>
