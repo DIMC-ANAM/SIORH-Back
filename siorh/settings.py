@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-jv6rmkc#@ee793nts78h0_7t(0ygq9yr7(+1@7fwvt7o+tpxkv
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['atenea-gob.cloud', 'www.atenea-gob.cloud', '168.231.73.222', '127.0.0.1', '89.116.51.124', 'localhost']
+ALLOWED_HOSTS = ['atenea-gob.cloud', 'www.atenea-gob.cloud', '168.231.73.222', '127.0.0.1', '89.116.51.124', 'localhost', 'siorh-anam.ddns.net']
 
 # Application definition
 
