@@ -15,9 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.conf import settings
 from django.urls import include, path
+from django.views.generic import RedirectView
+
+FRONTEND_LOGIN_URL = getattr(settings, 'FRONTEND_LOGIN_URL', 'http://127.0.0.1:4200/auth/login')
 
 urlpatterns = [
+    path('', RedirectView.as_view(url=FRONTEND_LOGIN_URL, permanent=False)),
+    path('login', RedirectView.as_view(url=FRONTEND_LOGIN_URL, permanent=False)),
+    path('login/', RedirectView.as_view(url=FRONTEND_LOGIN_URL, permanent=False)),
     path('admin/', admin.site.urls),
     path('api/', include('ws_siorh.api_urls')),
 ]

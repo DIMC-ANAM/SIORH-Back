@@ -2,11 +2,14 @@ import base64
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils.html import format_html
-from .models import PlantillaFin, BajasFin
+from django.utils.safestring import mark_safe
+from .models import PlantillaFin, BajasFin, Movimiento
 from django.db.models import Count
 import openpyxl
 from openpyxl.drawing.image import Image
 from io import BytesIO
+from collections import defaultdict
+from datetime import datetime
 
 # Importamos lo necesario para la bitácora
 try:
@@ -55,8 +58,12 @@ class PlantillaFinAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Información Personal', { 'fields': ('mostrar_foto_de_base_de_datos','nombres', 'rfc', 'curp', 'num_empleado') }),
         ('Detalles del Puesto', { 'fields': ('posicion', 'estado_nomina', 'nivel', 'codigo_presupuestal', 'nombre_puesto_funcional', 'tipo_de_contratacion') }),
+        ('Control de Asistencia', {
+            'classes': ('collapse', 'tab', 'empty-form'),
+            'fields': ('calendario_asistencia',),
+        }),
     )
-    readonly_fields = ('mostrar_foto_de_base_de_datos',)
+    readonly_fields = ('mostrar_foto_de_base_de_datos', 'calendario_asistencia')
     
     # --- MÉTODOS PARA COLOREAR Y MOSTRAR FOTOS ---
     def _get_row_color(self, obj):
@@ -137,6 +144,109 @@ class PlantillaFinAdmin(admin.ModelAdmin):
             imagen_base64 = base64.b64encode(obj.foto).decode('utf-8')
             return format_html(f'<img src="data:image/jpeg;base64,{imagen_base64}" style="width: 60px; height: auto;" />')
         return "N/A"
+
+    @admin.display(description='Calendario de asistencia')
+    def calendario_asistencia(self, obj):
+        if not obj:
+            return ""
+
+        num_empleado = getattr(obj, 'num_empleado', None)
+        if not num_empleado:
+            return mark_safe('No se encontró número de empleado para enlazar asistencias.')
+
+        empleado = str(num_empleado).strip()
+        empleado_sin_ceros = empleado.lstrip('0') or empleado
+        movimientos = (
+            Movimiento.objects
+            .filter(id_empl__in={empleado, empleado_sin_ceros})
+            .order_by('-fecha_efectiva', '-fecha_captura', '-sec')
+        )
+        if not movimientos.exists():
+            return mark_safe('No se encontraron registros para calcular asistencia.')
+
+        def extraer_fecha_hora(valor):
+            """Parsea varios formatos posibles y regresa (fecha, hora)."""
+            if not valor:
+                return None, None
+            txt = str(valor).strip()
+            formatos = (
+                ('%Y-%m-%d %H:%M:%S', 19),
+                ('%Y-%m-%d %H:%M', 16),
+                ('%Y-%m-%d', 10),
+            )
+            for fmt, lng in formatos:
+                try:
+                    dt = datetime.strptime(txt[:lng], fmt)
+                    return dt.date().isoformat(), dt.strftime('%H:%M')
+                except Exception:
+                    continue
+
+            # Fallback si viene como YYYY-MM-DD... sin formato estricto.
+            if len(txt) >= 10 and txt[4] == '-' and txt[7] == '-':
+                fecha = txt[:10]
+                hora = txt[11:16] if len(txt) >= 16 else '--:--'
+                return fecha, hora
+            return None, None
+
+        dias = defaultdict(list)
+        for mov in movimientos:
+            fecha, hora = extraer_fecha_hora(mov.fecha_captura or mov.fecha_efectiva)
+            if not fecha:
+                continue
+            dias[fecha].append(hora or '--:--')
+
+        if not dias:
+            return mark_safe('No hay fechas válidas para construir el calendario de asistencia.')
+
+        filas = []
+        for fecha in sorted(dias.keys(), reverse=True):
+            horas_dia = sorted([h for h in dias[fecha] if h and h != '--:--'])
+            entrada = horas_dia[0] if horas_dia else '--:--'
+            salida = horas_dia[-1] if len(horas_dia) > 1 else '--:--'
+            filas.append((fecha, entrada, salida))
+
+        html = """
+        <style>
+            .asistencia-tabla {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 11px;
+                margin: 8px 0;
+            }
+            .asistencia-tabla th, .asistencia-tabla td {
+                border: 1px solid #ddd;
+                padding: 4px 6px;
+                text-align: center;
+            }
+            .asistencia-tabla th {
+                background: #f5f5f5;
+            }
+        </style>
+        <table class="asistencia-tabla">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Hora de entrada</th>
+                    <th>Hora de salida</th>
+                </tr>
+            </thead>
+            <tbody>
+        """
+
+        for fecha, entrada, salida in filas[:60]:
+            html += f"""
+                <tr>
+                    <td>{fecha}</td>
+                    <td>{entrada}</td>
+                    <td>{salida}</td>
+                </tr>
+            """
+
+        html += """
+            </tbody>
+        </table>
+        """
+        return mark_safe(html)
 
     # --- ACCIÓN DE EXPORTAR CON REGISTRO EN BITÁCORA ---
     @admin.action(description="Exportar a Excel con Imágenes")
