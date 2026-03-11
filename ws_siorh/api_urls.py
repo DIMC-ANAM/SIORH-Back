@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .api_views import BajasFinViewSet, PlantillaFinViewSet, aduana_tablero
+from .api_views import BajasFinViewSet, PlantillaFinViewSet, aduana_tablero, plantilla_resumen_rapido
 from . import views
 
 router = DefaultRouter()
@@ -15,5 +15,6 @@ urlpatterns = [
     path('plantilla/<str:posicion_pk>/pdf/', views.generar_cedula_pdf, name='generar_cedula_pdf'),
     path('plantilla/<str:posicion_pk>/detalle/', views.obtener_detalle_empleado, name='obtener_detalle_empleado'),
     path('plantilla/aduana_tablero/', aduana_tablero, name='aduana_tablero'),
+    path('plantilla/resumen_rapido/', plantilla_resumen_rapido, name='plantilla_resumen_rapido'),
     path('baja/<str:pk>/pdf/', views.generar_baja_pdf, name='generar_baja_pdf'),
 ]

@@ -20,6 +20,7 @@ class PlantillaFinSerializer(serializers.ModelSerializer):
             'motivo',
             'fecha_efectiva_personal',
             'fecha_de_captura',
+            'fecha_prevista_de_salida',
             'qna',
             'nivel',
             'programa',

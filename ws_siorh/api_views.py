@@ -96,18 +96,20 @@ class BajasFinViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['GET'])
 def aduana_tablero(request):
     """Devuelve un resumen por aduana (dg_o_aduana_compactada) con conteos
-    de civiles y militares y la suma del COSTO_PLAZA_ANUAL.
+    de civiles y militares y la suma del COSTO_PLAZA_ANUAL/COSTO_PLAZA_MENSUAL.
     """
     qs = PlantillaFin.objects.values(
         'dg_o_aduana_compactada',
         'personal_militar_o_civil',
         'costo_plaza_anual',
+        'costo_plaza_mensual',
         'nombres',
         'depuracion_vacancia',
         'posicion',
         'reportada',
         'nombre_puesto_funcional',
         'posicion_civil_sedena_semar',
+        'nj',
     )
 
     def parse_cost(val):
@@ -143,6 +145,7 @@ def aduana_tablero(request):
         return False
 
     result = {}
+    nj_summary = {}
     for row in qs:
         if es_vacante(row):
             continue
@@ -159,13 +162,15 @@ def aduana_tablero(request):
 
         aduana_norm = _normalize_no_diacritic(aduana_trim)
 
-        # Unir DOAF CDMX y DOAF Queretaro con ANAM
-        if aduana_norm in ('doaf cdmx', 'doaf cdmx ', 'doaf queretaro', 'doaf queretaro ', 'anam'):
-            aduana = 'ANAM'
+        # Unir DOAF CDMX y DOAF Queretaro con UAF
+        if aduana_norm in ('doaf cdmx', 'doaf cdmx ', 'doaf queretaro', 'doaf queretaro ', 'uaf'):
+            aduana = 'UAF'
         else:
             aduana = aduana_trim or 'SIN ADUANA'
         tipo = (row.get('personal_militar_o_civil') or '').strip()
         costo = parse_cost(row.get('costo_plaza_anual'))
+        costo_mensual = parse_cost(row.get('costo_plaza_mensual'))
+        nj = (row.get('nj') or '').strip()
 
         entry = result.setdefault(
             aduana,
@@ -174,8 +179,13 @@ def aduana_tablero(request):
                 'civiles': 0,
                 'militares': 0,
                 'costo_plaza_anual_total': 0.0,
+                'costo_plaza_mensual_total': 0.0,
                 'costo_civiles': 0.0,
                 'costo_militares': 0.0,
+                'costo_civiles_mensual': 0.0,
+                'costo_militares_mensual': 0.0,
+                'niveles_civiles': {},
+                'niveles_militares': {},
             },
         )
 
@@ -184,20 +194,134 @@ def aduana_tablero(request):
         if 'militar' in lower or 'sedena' in lower or 'semar' in lower:
             entry['militares'] += 1
             entry['costo_militares'] += costo
+            entry['costo_militares_mensual'] += costo_mensual
+            tipo_personal = 'militar'
+            if nj:
+                entry['niveles_militares'][nj] = entry['niveles_militares'].get(nj, 0) + 1
         else:
-            # Por defecto considerar como civil si no contiene 'militar'
             entry['civiles'] += 1
             entry['costo_civiles'] += costo
+            entry['costo_civiles_mensual'] += costo_mensual
+            tipo_personal = 'civil'
+            if nj:
+                entry['niveles_civiles'][nj] = entry['niveles_civiles'].get(nj, 0) + 1
 
         entry['costo_plaza_anual_total'] += costo
+        entry['costo_plaza_mensual_total'] += costo_mensual
+
+        # Resumen por NJ
+        if nj:
+            nj_entry = nj_summary.setdefault(nj, {'nj': nj, 'civiles': 0, 'militares': 0})
+            if tipo_personal == 'militar':
+                nj_entry['militares'] += 1
+            else:
+                nj_entry['civiles'] += 1
 
     # Convertir a lista y ordenar por nombre de aduana
     data = sorted(result.values(), key=lambda x: x['aduana'] or '')
 
+    # Convertir resumen de NJ a lista y ordenar por NJ
+    nj_data = sorted(nj_summary.values(), key=lambda x: x['nj'] or '')
+
     # Asegurar tipos JSON serializables (floats)
     for e in data:
         e['costo_plaza_anual_total'] = round(e.get('costo_plaza_anual_total', 0.0), 2)
+        e['costo_plaza_mensual_total'] = round(e.get('costo_plaza_mensual_total', 0.0), 2)
         e['costo_civiles'] = round(e.get('costo_civiles', 0.0), 2)
         e['costo_militares'] = round(e.get('costo_militares', 0.0), 2)
+        e['costo_civiles_mensual'] = round(e.get('costo_civiles_mensual', 0.0), 2)
+        e['costo_militares_mensual'] = round(e.get('costo_militares_mensual', 0.0), 2)
+        e['niveles_civiles'] = sorted(
+            [{'nj': k, 'cantidad': v} for k, v in e.get('niveles_civiles', {}).items()],
+            key=lambda x: x['nj'] or ''
+        )
+        e['niveles_militares'] = sorted(
+            [{'nj': k, 'cantidad': v} for k, v in e.get('niveles_militares', {}).items()],
+            key=lambda x: x['nj'] or ''
+        )
 
-    return Response(data)
+    return Response({
+        'aduana': data,
+        'nj': nj_data,
+    })
+
+
+@api_view(['GET'])
+def plantilla_resumen_rapido(request):
+    """Resumen rápido para dashboard de plantilla_fin."""
+    qs = PlantillaFin.objects.values(
+        'estado_nomina',
+        'codigo_presupuestal',
+        'nombres',
+        'depuracion_vacancia',
+        'posicion',
+        'reportada',
+        'nombre_puesto_funcional',
+        'posicion_civil_sedena_semar',
+        'personal_militar_o_civil',
+    )
+
+    active_states = {
+        'permiso',
+        'suspendido',
+        'permiso retribuido',
+        'activo',
+    }
+
+    vacante_pattern = re.compile(r"\b(vacante|vacantes|vacancia|vacío|vacio|vacía|sin ocupar)\b", re.IGNORECASE)
+
+    def _normalize_no_diacritic(s: str) -> str:
+        s = s or ''
+        s = str(s)
+        s = unicodedata.normalize('NFKD', s)
+        s = ''.join(ch for ch in s if not unicodedata.combining(ch))
+        return s.strip().lower()
+
+    total_posiciones = 0
+    total_activos = 0
+    total_vacantes = 0
+    posiciones_con_codigo = 0
+    vacantes_sin_codigo = 0
+
+    for row in qs:
+        total_posiciones += 1
+
+        estado_nomina = _normalize_no_diacritic(row.get('estado_nomina'))
+        if estado_nomina in active_states:
+            total_activos += 1
+
+        codigo_presupuestal = (row.get('codigo_presupuestal') or '').strip()
+        has_codigo = bool(codigo_presupuestal)
+        if has_codigo:
+            posiciones_con_codigo += 1
+
+        check_fields = [
+            row.get('nombres'),
+            row.get('depuracion_vacancia'),
+            row.get('posicion'),
+            row.get('reportada'),
+            row.get('nombre_puesto_funcional'),
+            row.get('posicion_civil_sedena_semar'),
+            row.get('personal_militar_o_civil'),
+        ]
+
+        is_vacante = False
+        for value in check_fields:
+            if not value:
+                continue
+            if vacante_pattern.search(str(value)):
+                is_vacante = True
+                break
+
+        if is_vacante:
+            total_vacantes += 1
+            if not has_codigo:
+                vacantes_sin_codigo += 1
+
+    return Response({
+        'total_posiciones': total_posiciones,
+        'total_activos': total_activos,
+        'total_vacantes': total_vacantes,
+        'posiciones_con_codigo': posiciones_con_codigo,
+        'vacantes_sin_codigo': vacantes_sin_codigo,
+    })
