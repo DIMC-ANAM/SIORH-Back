@@ -4,6 +4,11 @@ from rest_framework.routers import DefaultRouter
 from .api_views import BajasFinViewSet, PlantillaFinViewSet, aduana_tablero, plantilla_resumen_rapido
 from . import views
 
+try:
+    from auditoria import views as auditoria_views
+except Exception:
+    auditoria_views = None
+
 router = DefaultRouter()
 router.register(r'plantillaFin', PlantillaFinViewSet, basename='plantilla-fin')
 router.register(r'bajasFin', BajasFinViewSet, basename='bajas-fin')
@@ -18,3 +23,8 @@ urlpatterns = [
     path('plantilla/resumen_rapido/', plantilla_resumen_rapido, name='plantilla_resumen_rapido'),
     path('baja/<str:pk>/pdf/', views.generar_baja_pdf, name='generar_baja_pdf'),
 ]
+
+if auditoria_views is not None:
+    urlpatterns.append(
+        path('auditoria/registros/', auditoria_views.registros_actividad_api, name='auditoria_registros')
+    )
