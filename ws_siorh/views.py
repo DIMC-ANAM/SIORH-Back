@@ -1,6 +1,8 @@
 import base64
 import json
 import os
+from collections import defaultdict
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -249,6 +251,160 @@ def obtener_detalle_empleado(request, posicion_pk):
         except Exception:
             domicilio_data = {}
 
+    control_asistencia_disponible = False
+    control_asistencia_mensaje = 'Sin registros de asistencia para este empleado.'
+    control_asistencia_registros = []
+
+    DIAS_ES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    MESES_ES = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+    ]
+
+    def _fmt_temp(val):
+        if isinstance(val, (int, float)):
+            return f'{float(val):.1f}°'
+        if val:
+            return f'{val}°'
+        return '-'
+
+    acceso_model = _get_model('Acceso2025')
+    if acceso_model and num_empleado:
+        try:
+            empleado = str(num_empleado).strip()
+            empleado_sin_ceros = empleado.lstrip('0') or empleado
+            accesos_qs = (
+                acceso_model.objects
+                .filter(empleado__in={empleado, empleado_sin_ceros})
+                .order_by('date_raw')
+            )
+
+            dias = defaultdict(list)
+            for acc in accesos_qs:
+                raw = str(getattr(acc, 'date_raw', '') or '').strip()
+                if len(raw) < 10:
+                    continue
+
+                fecha = raw[:10]
+                hora = raw[11:19] if len(raw) >= 19 else (raw[-8:] if len(raw) >= 8 else '00:00:00')
+
+                try:
+                    dt = datetime.strptime(fecha, '%Y-%m-%d')
+                except Exception:
+                    continue
+
+                # Temperatura: primeros 6 caracteres de param0 (igual que admin.py)
+                temp_raw = str(getattr(acc, 'param0', '') or '')[:6].strip()
+                temp_clean = ''.join(
+                    ch for ch in temp_raw.replace(',', '.') if ch.isdigit() or ch in '.-'
+                ).strip('.')
+                if temp_clean:
+                    try:
+                        temp_val = float(temp_clean)
+                    except Exception:
+                        temp_val = None
+                else:
+                    temp_val = None
+
+                try:
+                    hh = int(hora[:2])
+                except Exception:
+                    hh = 0
+
+                dias[fecha].append({
+                    'hora': hora,
+                    'temp': temp_val,
+                    'dt': dt,
+                    'hh': hh,
+                })
+
+            if dias:
+                for fecha_str in sorted(dias.keys(), reverse=True):
+                    registros_dia = dias[fecha_str]
+                    dt = registros_dia[0]['dt']
+
+                    registros_manan = [r for r in registros_dia if r['hh'] < 12]
+                    registros_tarde = [r for r in registros_dia if r['hh'] >= 12]
+
+                    entrada = min(registros_manan, key=lambda r: r['hora']) if registros_manan else None
+                    salida = max(registros_tarde, key=lambda r: r['hora']) if registros_tarde else None
+
+                    dia_nombre = DIAS_ES[dt.weekday()]
+                    mes_nombre = MESES_ES[dt.month - 1]
+                    fecha_label = f'{dia_nombre} {dt.day} {mes_nombre} {dt.year}'
+
+                    control_asistencia_registros.append({
+                        'fecha': fecha_str,
+                        'fecha_label': fecha_label,
+                        'hora_entrada': entrada['hora'][:5] if entrada else '-',
+                        'temp_entrada': _fmt_temp(entrada['temp']) if entrada else '-',
+                        'hora_salida': salida['hora'][:5] if salida else '-',
+                        'temp_salida': _fmt_temp(salida['temp']) if salida else '-',
+                    })
+
+                control_asistencia_disponible = True
+                control_asistencia_mensaje = 'Registros de asistencia obtenidos desde accesos_2025.'
+        except Exception:
+            control_asistencia_disponible = False
+            control_asistencia_registros = []
+            control_asistencia_mensaje = 'No fue posible procesar la asistencia desde accesos_2025.'
+
+    # Fallback: usar movimientos si no hubo datos en accesos_2025
+    if not control_asistencia_disponible and movimiento_model and num_empleado:
+        try:
+            empleado = str(num_empleado).strip()
+            empleado_sin_ceros = empleado.lstrip('0') or empleado
+            mov_asistencia_qs = (
+                movimiento_model.objects
+                .filter(id_empl__in={empleado, empleado_sin_ceros})
+                .order_by('-fecha_efectiva', '-fecha_captura', '-sec')
+            )
+
+            dias_mov = defaultdict(list)
+            for mov in mov_asistencia_qs:
+                fval = mov.fecha_captura or mov.fecha_efectiva
+                if not fval:
+                    continue
+                try:
+                    dt = datetime.strptime(str(fval).strip()[:19].replace('T', ' '), '%Y-%m-%d %H:%M:%S')
+                except Exception:
+                    try:
+                        dt = datetime.strptime(str(fval).strip()[:10], '%Y-%m-%d')
+                    except Exception:
+                        continue
+                dias_mov[dt.date().isoformat()].append(dt.strftime('%H:%M'))
+
+            if dias_mov:
+                for fecha_str in sorted(dias_mov.keys(), reverse=True):
+                    try:
+                        dt = datetime.strptime(fecha_str, '%Y-%m-%d')
+                        dia_nombre = DIAS_ES[dt.weekday()]
+                        mes_nombre = MESES_ES[dt.month - 1]
+                        fecha_label = f'{dia_nombre} {dt.day} {mes_nombre} {dt.year}'
+                    except Exception:
+                        fecha_label = fecha_str
+
+                    horas_dia = sorted([h for h in dias_mov[fecha_str] if h and h != '--:--'])
+                    entrada = horas_dia[0] if horas_dia else '-'
+                    salida = horas_dia[-1] if len(horas_dia) > 1 else '-'
+                    control_asistencia_registros.append({
+                        'fecha': fecha_str,
+                        'fecha_label': fecha_label,
+                        'hora_entrada': entrada,
+                        'temp_entrada': '-',
+                        'hora_salida': salida,
+                        'temp_salida': '-',
+                    })
+
+                control_asistencia_disponible = True
+                control_asistencia_mensaje = 'Registros de asistencia calculados desde movimientos del empleado.'
+            else:
+                control_asistencia_mensaje = 'No se encontraron fechas válidas para calcular asistencia.'
+        except Exception:
+            control_asistencia_disponible = False
+            control_asistencia_registros = []
+            control_asistencia_mensaje = 'No fue posible procesar la asistencia del empleado.'
+
     payload = {
         'informacion_personal': {
             'nombres': registro.nombres,
@@ -277,9 +433,9 @@ def obtener_detalle_empleado(request, posicion_pk):
         'historico_plaza': historial_plaza,
         'historico_movimientos_personal': movimientos_personal,
         'control_asistencia': {
-            'disponible': False,
-            'mensaje': 'Sin fuente de datos de asistencia en este backend.',
-            'registros': [],
+            'disponible': control_asistencia_disponible,
+            'mensaje': control_asistencia_mensaje,
+            'registros': control_asistencia_registros,
         },
     }
 

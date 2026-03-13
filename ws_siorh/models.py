@@ -284,3 +284,26 @@ class Movimiento(models.Model):
     class Meta:
         managed = False
         db_table = 'MOV_TOTAL'
+
+
+class Acceso2025(models.Model):
+    
+    date_raw = models.CharField(
+        db_column="date",
+        max_length=255,
+        primary_key=True,         
+    )
+
+    param0 = models.CharField(max_length=255, blank=True, null=True)
+    time = models.CharField(max_length=255, blank=True, null=True)
+    time2 = models.CharField(max_length=255, blank=True, null=True)
+    empleado = models.CharField(max_length=255, blank=True, null=True)
+    nombre = models.CharField(max_length=255, blank=True, null=True)
+    apellido = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = "accesos_2025"
+
+    def __str__(self):
+        return f"{self.empleado} - {self.date_raw}"
